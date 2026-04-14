@@ -12,11 +12,14 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
     GBP: "£",
   };
   const symbol = symbols[currency] || currency + " ";
-  
-  // BUG: doesn't handle negative numbers correctly
-  // BUG: doesn't handle zero decimal places (shows "$100" not "$100.00")
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
+
+  const isNegative = amount < 0;
+  const absAmount = Math.abs(amount);
+  const parts = absAmount.toFixed(2).split(".");
+  const intPart = parseInt(parts[0], 10).toLocaleString("en-US");
+  const formatted = `${intPart}.${parts[1]}`;
+
+  return isNegative ? `${symbol}-${formatted}` : `${symbol}${formatted}`;
 }
 
 /**
@@ -26,7 +29,6 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
  * @returns The numeric value
  */
 export function parseCurrency(str: string): number {
-  // BUG: doesn't strip currency symbols properly — only strips $
-  const cleaned = str.replace("$", "").replace(/,/g, "");
+  const cleaned = str.replace(/[^0-9.\-]/g, "").replace(/,(?=\d{3})/g, "").trim();
   return parseFloat(cleaned);
 }
